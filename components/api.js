@@ -3,7 +3,8 @@ class Api {
 	async getToken(body){
 		let result
 		try{
-			const response = await fetch(`/jwt`, {
+			console.log(body)
+			const response = await fetch(`https://tuba.work/jwt`, {
 				method: 'POST',
 				headers: {'Accept': 'application/json',
 							'Content-Type': 'application/json'},
@@ -18,10 +19,10 @@ class Api {
 				}
 			}else{
 				result = {error: user.msg}
-				console.error(`Error ho: ${user.msg}`)
+				console.log(`Error ho: ${user.msg}`)
 			}
 		}catch(e){
-			console.error(`Error he: ${e}`)
+			console.log(`Error he: ${e}`)
 			result = {error: "Authentication failed"}
 		}
 		return result
@@ -51,7 +52,7 @@ class Api {
 
 	async getSongs(user){
 		const options = {headers: {"token": user.token}}
-		let response = await fetch(`/songs`, options)
+		let response = await fetch(`https://tuba.work/songs`, options)
 		if(response.ok) response = await response.json()
 		 //await response.text()
 		return response

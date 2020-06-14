@@ -19,6 +19,7 @@ class Player extends React.Component {
 	}
 
 	handleChange = event => {
+		if(this.state.error) this.setState({error: false})
 		const {name, value} = event.target
 		this.setState({[name]: value})
 	}
@@ -31,10 +32,13 @@ class Player extends React.Component {
 		const user = await api.getToken(body)
 		if(!user.error){
 			localStorage.setItem('user', JSON.stringify(user.user))
+			user.loading = false
+			user.songs = await api.getSongs(user.user)
+			this.setState(user)
+		}else{
+			this.setState({error: user.error, loading: false})
 		}
-		user.loading = false
-		user.songs = await api.getSongs(user.user)
-		this.setState(user)
+		
 	}
 
 	face = async face_user => {
@@ -66,8 +70,7 @@ class Player extends React.Component {
 	}
 
 	render(){
-		const {songs} = this.props
-		const {loading, error, face_auth} = this.state
+		const {loading, error, face_auth, songs} = this.state
 		return (<div>
 			{this.state.user ? 
 				<SongList songList={songs} /> : 

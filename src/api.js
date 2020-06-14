@@ -1,25 +1,27 @@
-let host = 'localhost' //'tuba.work'
-let port = 4000
-
 class Api {
 
 	async getToken(body){
 		let result
 		try{
-			const response = await fetch(`http://${host}:${port}/jwt`, {
+			const response = await fetch(`/jwt`, {
 				method: 'POST',
 				headers: {'Accept': 'application/json',
 							'Content-Type': 'application/json'},
 				body: body
 			})
 			const user = await response.json()
-			const {token, data: {username}} = user
-			result = {user: 
-				{username, token},
-				error: false
+			if(user.ok){
+				const {token, data: {username}} = user
+				result = {user: 
+					{username, token},
+					error: false
+				}
+			}else{
+				result = {error: user.msg}
+				console.error(`Error ho: ${user.msg}`)
 			}
 		}catch(e){
-			console.error(`Error hi: ${e}`)
+			console.error(`Error he: ${e}`)
 			result = {error: "Authentication failed"}
 		}
 		return result
@@ -31,7 +33,7 @@ class Api {
 						`input_token=${face_user.accessToken}`+
 						`&access_token=${face_user.accessToken}`
 		try{
-			const web = `http://${host}:${port}/isValid`
+			const web = `/isValid`
 			const response = await fetch(web, {
 				method: 'POST',
 				headers: {'Accept': 'application/json',
@@ -48,10 +50,10 @@ class Api {
 	}
 
 	async getSongs(user){
-		const web = `http://${host}:${port}/songs`
 		const options = {headers: {"token": user.token}}
-		const response = await fetch(web, options)
-		console.log(await response.text())
+		let response = await fetch(`/songs`, options)
+		if(response.ok) response = await response.json()
+		 //await response.text()
 		return response
 	}
 }

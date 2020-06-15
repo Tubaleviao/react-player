@@ -2,77 +2,95 @@ import React from 'react';
 import Login from './login'
 import SongList from './songList'
 import api from './api'
-import { AsyncStorage, View, Text, Button, StyleSheet } from 'react-native';
+import { AsyncStorage, View, Text, Button, StyleSheet, Slider } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Constants from 'expo-constants'
 import { Audio } from 'expo-av';
 import { AntDesign, FontAwesome } from '@expo/vector-icons'; 
+import { Subject } from 'rxjs'
+import { debounceTime } from 'rxjs/operators'
 
 const Stack = createStackNavigator();
-
 //Audio.setAudioModeAsync({staysActiveInBackground: true})
 
 class Player extends React.Component {
 
 	state = {
-		user: false,
-		loading: !(AsyncStorage.getItem('user')==null),
-		error: false,
-		songs: [],
-		username: this.props.route.params.user,
-		pass: "",				// get, set, remove
-		playing: false,
+		songs: this.props.route.params.songs,
+		user: this.props.route.params.user,
 		so: new Audio.Sound(),
+		subject: new Subject(),
 	}
 
-	load = async () => this.setState({loading: true});
+	load = async () => this.setState({loading: true})
+	play =  async() => this.state.so.playAsync()
+	stop = async () => this.state.so.stopAsync()
+	pause = async () => this.state.so.pauseAsync()
 
-	playSong = async (song='') => {
-		if(this.state.playing){
-			this.state.so.stopAsync()
-			this.setState({playing: false})
-		}else{
-			try {
-				const status = await this.state.so.getStatusAsync()
-				const uri = `/users/${this.state.username}/${song}`
-				console.log(song) 
-				if(!status.isLoaded || status.uri){ // || status.uri !== uri
-					await this.state.so.unloadAsync()
-					await this.state.so.loadAsync({uri: `https://tuba.work${uri}`},
-				    { shouldPlay: true })
-				  await this.state.so.playAsync()
-				  this.setState({playing: song})
-				}
-			} catch (error) {
-			  console.log(error)
-			}
+	//backward = async () => this.state.so.pauseAsync()
+	forward = async () => this.state.so.setVolumeAsync(0.42)
+	repeat = async () => this.state.so.pauseAsync()
+	//random = async () => this.state.so.pauseAsync()
+	volume = v => {
+		this.state.so.setVolumeAsync(v); 
+		this.updatePlayer()
+	}
+
+	icon = name => (<FontAwesome name={name} onPress={this[name]} size={32} color="lime" />)
+
+	updatePlayer = async () => {
+		const status = await this.state.so.getStatusAsync()
+		if(status.isLoaded){
+			let partedUri = status.uri.split('/')
+			this.setState({
+				playing: status.isPlaying ? partedUri[partedUri.length-1] : false,
+				volume: (status.volume*100).toFixed()+'%'
+			})
 		}
 	}
 
+	loadSong = async song => {
+		try {
+			const {so, subject, user} = this.state
+			const status = await so.getStatusAsync()
+			const uri = `https://tuba.work/users/${user}/${song}`
+			await so.unloadAsync()
+			await so.loadAsync({uri: uri}, { shouldPlay: true })
+			await so.playAsync()
+			subject.pipe(debounceTime(300)).subscribe(this.volume)
+			this.updatePlayer()
+		} catch (error) { console.log(error) }
+	}
+
+	componentDidMount() {
+		const {songs} = this.state
+		let len = songs.length
+		let song = songs[Math.floor(Math.random()*len)]
+		this.loadSong(song)
+	}
+
 	render(){
-		const {loading, error, playing} = this.state
+		const {loading, error, songs, playing, so, volume, subject} = this.state
 		const {navigation} = this.props
-		const {songs,user} = this.props.route.params
 		return (
 			<View style={styles.app}>
 				{error && <Text>{error}</Text>}
 				<Text style={styles.container}>{playing}</Text>
+				<Slider value={1} onValueChange={v => subject.next(v) } />
+				<Text style={styles.container}>{volume}</Text>
 				<Text style={styles.container}>
-					{playing ? <FontAwesome name="pause" size={32} color="lime" /> : 
-						<FontAwesome name="play" size={32} color="lime" />},
-					<FontAwesome name="backward" size={32} color="lime" />,
-					<FontAwesome name="forward" size={32} color="lime" />, 
-					<FontAwesome name="stop" size={32} color="lime" />, 
-					<FontAwesome name="repeat" size={32} color="lime" />, 
-					<FontAwesome name="volume-up" size={32} color="lime" />, 
-					<FontAwesome name="volume-down" size={32} color="lime" />, 
-					<FontAwesome name="volume-off" size={32} color="lime" />, 
-					<FontAwesome name="random" size={32} color="lime" />, 
-					play button, 
-					music title, etc...
+					{this.icon('backward')}, 
+					{playing ? this.icon('pause') : this.icon('play')}, 
+					{this.icon('forward')}, 
+					{this.icon('stop')}, 
+					{this.icon('repeat')}, 
+					{this.icon('volume-up')}, 
+					{this.icon('volume-down')}, 
+					{this.icon('volume-off')}, 
+					{this.icon('random')}
 				</Text>
-				<SongList songList={songs} navigation={navigation} play={this.playSong}/>
+				<SongList songList={songs} navigation={navigation} play={this.play}/>
 			</View>)
 	}
 }
@@ -139,5 +157,30 @@ Object {
   "uri": "/users/tuba/After Midnight.mp3",
   "volume": 1,
 }
+
+
+
+
+playSong = async (song='') => {
+		if(this.state.playing){
+			this.state.so.stopAsync()
+			this.setState({playing: false})
+		}else{
+			try {
+				const status = await this.state.so.getStatusAsync()
+				const uri = `/users/${this.state.username}/${song}`
+				console.log(song) 
+				if(!status.isLoaded || status.uri){ 
+					await this.state.so.unloadAsync()
+					await this.state.so.loadAsync({uri: `https://tuba.work${uri}`},
+				    { shouldPlay: true })
+				  await this.state.so.playAsync()
+				  this.setState({playing: song})
+				}
+			} catch (error) {
+			  console.log(error)
+			}
+		}
+	}
 
 			*/

@@ -42,7 +42,6 @@ class Login extends React.Component {
 			<Text>Welcome</Text>
 			{error && <Text>{error}</Text>}
 			<View>
-			<Button onPress={() => navigation.navigate('Profile')} title="Profile" />
 				<TextInput onChangeText={t => this.change({name: "username", value: t})} 
 					autoCompleteType="username" 
 					autoFocus={true} 

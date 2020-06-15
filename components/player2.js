@@ -24,18 +24,15 @@ class Player extends React.Component {
 	}
 
 	load = async () => this.setState({loading: true})
-	play =  async() => this.state.so.playAsync()
-	stop = async () => this.state.so.stopAsync()
-	pause = async () => this.state.so.pauseAsync()
+	play =  async() => {this.state.so.playAsync(); this.updatePlayer()}
+	stop = async () => {this.state.so.stopAsync(); this.updatePlayer()}
+	pause = async () => {this.state.so.pauseAsync(); this.updatePlayer()}
 
 	//backward = async () => this.state.so.pauseAsync()
 	forward = async () => this.state.so.setVolumeAsync(0.42)
 	repeat = async () => this.state.so.pauseAsync()
 	//random = async () => this.state.so.pauseAsync()
-	volume = v => {
-		this.state.so.setVolumeAsync(v); 
-		this.updatePlayer()
-	}
+	volume = v => { this.state.so.setVolumeAsync(v); this.updatePlayer() }
 
 	icon = name => (<FontAwesome name={name} onPress={this[name]} size={32} color="lime" />)
 
@@ -44,7 +41,8 @@ class Player extends React.Component {
 		if(status.isLoaded){
 			let partedUri = status.uri.split('/')
 			this.setState({
-				playing: status.isPlaying ? partedUri[partedUri.length-1] : false,
+				playing: status.isPlaying ? true : false,
+				music: partedUri[partedUri.length-1],
 				volume: (status.volume*100).toFixed()+'%'
 			})
 		}
@@ -71,24 +69,23 @@ class Player extends React.Component {
 	}
 
 	render(){
-		const {loading, error, songs, playing, so, volume, subject} = this.state
+		const {loading, error, songs, playing, music, so, volume, subject} = this.state
 		const {navigation} = this.props
 		return (
 			<View style={styles.app}>
 				{error && <Text>{error}</Text>}
-				<Text style={styles.container}>{playing}</Text>
-				<Slider value={1} onValueChange={v => subject.next(v) } />
-				<Text style={styles.container}>{volume}</Text>
+
+				<Text style={styles.container}>{music}</Text>
+				<Slider style={{flex: 1}} value={1} />
+				
 				<Text style={styles.container}>
-					{this.icon('backward')}, 
 					{playing ? this.icon('pause') : this.icon('play')}, 
 					{this.icon('forward')}, 
 					{this.icon('stop')}, 
 					{this.icon('repeat')}, 
-					{this.icon('volume-up')}, 
+					, 
 					{this.icon('volume-down')}, 
-					{this.icon('volume-off')}, 
-					{this.icon('random')}
+					{this.icon('volume-off')}
 				</Text>
 				<SongList songList={songs} navigation={navigation} play={this.play}/>
 			</View>)
@@ -182,5 +179,11 @@ playSong = async (song='') => {
 			}
 		}
 	}
+
+	<View style={{flexDirection:'row', flexWrap:'wrap'}}>
+					{this.icon('volume-up')}
+					<Slider value={1} onValueChange={v => subject.next(v)} style={{flex: 1}} />
+					<Text style={{color:'lime'}}>{volume}</Text>
+				</View>
 
 			*/

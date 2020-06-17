@@ -16,67 +16,97 @@ const Stack = createStackNavigator();
 
 class Player extends React.Component {
 
+	constructor(props){
+		super(props)
+		this.mounted = false
+	}
+
 	state = {
 		songs: this.props.route.params.songs,
 		user: this.props.route.params.user,
 		so: new Audio.Sound(),
-		subject: new Subject(),
+		obs: new Subject(),
+		trackPos: 0,
 	}
 
 	load = async () => this.setState({loading: true})
-	play =  async() => {this.state.so.playAsync(); this.updatePlayer()}
-	stop = async () => {this.state.so.stopAsync(); this.updatePlayer()}
-	pause = async () => {this.state.so.pauseAsync(); this.updatePlayer()}
+	play =  async() => this.state.so.playAsync()
+	stop = async () => this.state.so.stopAsync()
+	pause = async () => this.state.so.pauseAsync()
 
 	//backward = async () => this.state.so.pauseAsync()
 	forward = async () => this.state.so.setVolumeAsync(0.42)
 	repeat = async () => this.state.so.pauseAsync()
+	sliding = async () => {if(!this.state.sliding) this.setState({sliding: true})}
 	//random = async () => this.state.so.pauseAsync()
-	volume = v => { this.state.so.setVolumeAsync(v); this.updatePlayer() }
+	//volume = v => { this.state.so.setVolumeAsync(v); this.updatePlayer() }
+	setTrack = v => {this.state.so.setPositionAsync(v); this.setState({sliding: false})}
 
 	icon = name => (<FontAwesome name={name} onPress={this[name]} size={32} color="lime" />)
 
-	updatePlayer = async () => {
-		const status = await this.state.so.getStatusAsync()
-		if(status.isLoaded){
-			let partedUri = status.uri.split('/')
-			this.setState({
-				playing: status.isPlaying ? true : false,
-				music: partedUri[partedUri.length-1],
-				volume: (status.volume*100).toFixed()+'%'
-			})
-		}
+	getNewSong = () => {
+		const {songs} = this.state
+		let len = songs.length
+		return songs[Math.floor(Math.random()*len)]
 	}
 
 	loadSong = async song => {
 		try {
-			const {so, subject, user} = this.state
-			const status = await so.getStatusAsync()
+			const {so, obs, user} = this.state
 			const uri = `https://tuba.work/users/${user}/${song}`
 			await so.unloadAsync()
-			await so.loadAsync({uri: uri}, { shouldPlay: true })
-			await so.playAsync()
-			subject.pipe(debounceTime(300)).subscribe(this.volume)
-			this.updatePlayer()
+			await so.setOnPlaybackStatusUpdate(this.updatePlayer)
+			await so.loadAsync({uri: uri})
+			await so.setStatusAsync({
+				progressUpdateIntervalMillis: 1100, 
+				shouldPlay: true,
+			})
 		} catch (error) { console.log(error) }
 	}
 
+	updatePlayer = async st => {
+		if(st && st.isLoaded){
+			const newMusic = st.uri.split('/')[st.uri.split('/').length-1]
+			const newPos = st.positionMillis
+			const {playing, music, trackPos, maxPos} = this.state
+			const toUpdate = {}
+			if(playing!==st.isPlaying) toUpdate.playing = st.isPlaying
+			if(music!==newMusic) toUpdate.music = newMusic
+			if(newPos-trackPos >= 999) toUpdate.trackPos = newPos
+			if(maxPos!==st.durationMillis){
+				toUpdate.maxPos = st.durationMillis
+				toUpdate.trackPos = 0
+			}
+			this.mounted && Object.keys(toUpdate).length && this.setState(toUpdate)
+			//this.mounted && Object.keys(toUpdate).length && console.log(st.uri)
+			if(st.didJustFinish) this.loadSong(this.getNewSong())
+		}
+	}
+
+	shouldComponentUpdate(np, nt){
+		if(nt.sliding) return false
+		else return true
+	}
+
 	componentDidMount() {
-		const {songs} = this.state
-		let len = songs.length
-		let song = songs[Math.floor(Math.random()*len)]
-		this.loadSong(song)
+		this.mounted = true
+		this.state.obs.pipe(debounceTime(800)).subscribe(this.setTrack)
+		this.loadSong(this.getNewSong())
 	}
 
 	render(){
-		const {loading, error, songs, playing, music, so, volume, subject} = this.state
+		const {error, songs, playing, music, obs, trackPos, maxPos} = this.state
 		const {navigation} = this.props
 		return (
 			<View style={styles.app}>
 				{error && <Text>{error}</Text>}
 
 				<Text style={styles.container}>{music}</Text>
-				<Slider style={{flex: 1}} value={1} />
+				<Slider style={styles.container} 
+					onValueChange={this.sliding}
+					onSlidingComplete={v => this.setTrack(v)} 
+					value={trackPos}
+					maximumValue={maxPos} />
 				
 				<Text style={styles.container}>
 					{playing ? this.icon('pause') : this.icon('play')}, 
@@ -89,6 +119,10 @@ class Player extends React.Component {
 				</Text>
 				<SongList songList={songs} navigation={navigation} play={this.play}/>
 			</View>)
+	}
+
+	componentWillUnmount() {
+	   this.mounted = false
 	}
 }
 
@@ -103,87 +137,3 @@ const styles = StyleSheet.create({
 	    margin: Constants.statusBarHeight,
 	},
 });
-
-
-
-
-
-/*
-
-
-
-	componentDidMount() {
-		console.log("componentDidMount")
-	}
-
-	componentDidUpdate() {
-		console.log("componentDidUpdate")
-	}
-
-	componentWillUnmount(){
-		console.log("componentWillUnmount")
-	}
-	
-
-	try{
-				const {sound: so, status} = await Audio.sound.createAsync(
-				    {uri: 'https://tuba.work/users/tuba/death%20bed.mp3'},
-				    { shouldPlay: true }
-				  )
-				this.setState({playing: true, so: so})
-			}catch(err){
-				console.log(err)
-			}
-
-console.log(await this.state.so.getStatusAsync())
-Object {
-  "androidImplementation": "SimpleExoPlayer",
-  "didJustFinish": false,
-  "durationMillis": 206915,
-  "isBuffering": true,
-  "isLoaded": true,
-  "isLooping": false,
-  "isMuted": false,
-  "isPlaying": true,
-  "playableDurationMillis": 42919,
-  "positionMillis": 0,
-  "progressUpdateIntervalMillis": 500,
-  "rate": 1,
-  "shouldCorrectPitch": false,
-  "shouldPlay": true,
-  "uri": "/users/tuba/After Midnight.mp3",
-  "volume": 1,
-}
-
-
-
-
-playSong = async (song='') => {
-		if(this.state.playing){
-			this.state.so.stopAsync()
-			this.setState({playing: false})
-		}else{
-			try {
-				const status = await this.state.so.getStatusAsync()
-				const uri = `/users/${this.state.username}/${song}`
-				console.log(song) 
-				if(!status.isLoaded || status.uri){ 
-					await this.state.so.unloadAsync()
-					await this.state.so.loadAsync({uri: `https://tuba.work${uri}`},
-				    { shouldPlay: true })
-				  await this.state.so.playAsync()
-				  this.setState({playing: song})
-				}
-			} catch (error) {
-			  console.log(error)
-			}
-		}
-	}
-
-	<View style={{flexDirection:'row', flexWrap:'wrap'}}>
-					{this.icon('volume-up')}
-					<Slider value={1} onValueChange={v => subject.next(v)} style={{flex: 1}} />
-					<Text style={{color:'lime'}}>{volume}</Text>
-				</View>
-
-			*/

@@ -1,7 +1,8 @@
 import React from 'react'
-import { View, Text, TextInput, Button, AsyncStorage } from 'react-native'
+import { View, Text, TextInput, Button, AsyncStorage, StyleSheet, StatusBar, TouchableOpacity } from 'react-native'
 import {StackActions, NavigationActions} from 'react-navigation'
 import api from './api'
+import Constants from 'expo-constants'
 
 class Login extends React.Component {
 
@@ -38,22 +39,66 @@ class Login extends React.Component {
 
 	render(){ 
 		const {error} = this.state
-		return (<View>
-			<Text>Welcome</Text>
-			{error && <Text>{error}</Text>}
-			<View>
-				<TextInput onChangeText={t => this.change({name: "username", value: t})} 
-					autoCompleteType="username" 
-					autoFocus={true} 
-					placeholder="Username..." />
-				<TextInput onChangeText={t => this.change({name: "pass", value: t})} 
-					secureTextEntry={true} 
-					autoCompleteType="password" 
-					placeholder="Password..." />
-				<Button onPress={this.submit} title="Submit" />
-			</View>
-		</View>) 
+		return (
+			<View style={styles.app}>
+				<StatusBar barStyle="light-content" backgroundColor="#000000" />
+				<Text style={styles.title}>Welcome</Text>
+				{error && <Text style={styles.error}>{error}</Text>}
+				<View style={styles.container}>
+					<TextInput 
+						autoCapitalize='none'
+						style={styles.input} 
+						onChangeText={t => this.change({name: "username", value: t})} 
+						autoCompleteType="username" 
+						autoFocus={true} 
+						placeholderTextColor='#007700'
+						placeholder="Username..." />
+				</View>
+				<View style={styles.container}>
+					<TextInput 
+						style={styles.input} 
+						onChangeText={t => this.change({name: "pass", value: t})} 
+						secureTextEntry={true} 
+						autoCompleteType="password" 
+						placeholderTextColor='#007700'
+						placeholder="Password..." />
+					
+				</View>
+				<Button color='#006600' onPress={this.submit} title="Submit" />
+			</View>) 
 	} 
 }
 
 export default Login
+
+const styles = StyleSheet.create({
+	app: {
+		backgroundColor: '#000000',
+		flex: 1,
+		flexDirection: 'column',
+		alignItems: 'center',
+	},
+	container: {
+		marginBottom: 25,
+		flexDirection: 'row',
+    	backgroundColor: '#000000',
+	},
+	input: {
+		color: 'lime', 
+		flex: 0.6, 
+		textAlign: 'center', 
+		backgroundColor:'#002200',
+	},
+	title: {
+		color: '#00ff00',
+		backgroundColor: '#000000',
+		textAlign: 'center',
+		margin: 25,
+	},
+	error: {
+		textAlign: 'center',
+    	backgroundColor: '#000000',
+	    color: '#ff0000',
+	    margin: 10,
+	},
+});

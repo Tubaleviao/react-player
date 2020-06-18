@@ -2,14 +2,13 @@ import React from 'react';
 import Login from './login'
 import SongList from './songList'
 import api from './api'
-import { AsyncStorage, View, Text, Button, StyleSheet, Slider } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { AsyncStorage, View, Text, Button, StyleSheet, Slider, TouchableHighlight, StatusBar } from 'react-native'
+import { NavigationContainer } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack'
 import Constants from 'expo-constants'
 import { Audio } from 'expo-av';
-import { AntDesign, FontAwesome } from '@expo/vector-icons'; 
-import { Subject } from 'rxjs'
-import { debounceTime } from 'rxjs/operators'
+import { AntDesign, FontAwesome } from '@expo/vector-icons'
+//import SafeAreaView from 'react-native-safe-area-view'; // ???
 
 const Stack = createStackNavigator();
 //Audio.setAudioModeAsync({staysActiveInBackground: true})
@@ -25,7 +24,6 @@ class Player extends React.Component {
 		songs: this.props.route.params.songs,
 		user: this.props.route.params.user,
 		so: new Audio.Sound(),
-		obs: new Subject(),
 		trackPos: 0,
 	}
 
@@ -35,14 +33,21 @@ class Player extends React.Component {
 	pause = async () => this.state.so.pauseAsync()
 
 	//backward = async () => this.state.so.pauseAsync()
-	forward = async () => this.state.so.setVolumeAsync(0.42)
+	forward = async () => this.loadSong(this.getNewSong())
 	repeat = async () => this.state.so.pauseAsync()
 	sliding = async () => {if(!this.state.sliding) this.setState({sliding: true})}
 	//random = async () => this.state.so.pauseAsync()
-	//volume = v => { this.state.so.setVolumeAsync(v); this.updatePlayer() }
-	setTrack = v => {this.state.so.setPositionAsync(v); this.setState({sliding: false})}
+	setTrack = v => {this.state.so.setPositionAsync(v); this.setState({sliding: false, trackPos: v})}
 
-	icon = name => (<FontAwesome name={name} onPress={this[name]} size={32} color="lime" />)
+	icon = name => (
+				<TouchableHighlight onPress={this[name]} activeOpacity={0.4}>
+					<FontAwesome 
+						style={styles.iconStyle}
+						name={name} 
+						size={32} 
+						color="lime" />
+				</TouchableHighlight>
+	)
 
 	getNewSong = () => {
 		const {songs} = this.state
@@ -52,7 +57,7 @@ class Player extends React.Component {
 
 	loadSong = async song => {
 		try {
-			const {so, obs, user} = this.state
+			const {so, user} = this.state
 			const uri = `https://tuba.work/users/${user}/${song}`
 			await so.unloadAsync()
 			await so.setOnPlaybackStatusUpdate(this.updatePlayer)
@@ -78,7 +83,6 @@ class Player extends React.Component {
 				toUpdate.trackPos = 0
 			}
 			this.mounted && Object.keys(toUpdate).length && this.setState(toUpdate)
-			//this.mounted && Object.keys(toUpdate).length && console.log(st.uri)
 			if(st.didJustFinish) this.loadSong(this.getNewSong())
 		}
 	}
@@ -90,7 +94,6 @@ class Player extends React.Component {
 
 	componentDidMount() {
 		this.mounted = true
-		this.state.obs.pipe(debounceTime(800)).subscribe(this.setTrack)
 		this.loadSong(this.getNewSong())
 	}
 
@@ -99,25 +102,22 @@ class Player extends React.Component {
 		const {navigation} = this.props
 		return (
 			<View style={styles.app}>
+				<StatusBar barStyle="light-content" backgroundColor="#000000" />
 				{error && <Text>{error}</Text>}
-
 				<Text style={styles.container}>{music}</Text>
 				<Slider style={styles.container} 
 					onValueChange={this.sliding}
 					onSlidingComplete={v => this.setTrack(v)} 
 					value={trackPos}
 					maximumValue={maxPos} />
-				
-				<Text style={styles.container}>
-					{playing ? this.icon('pause') : this.icon('play')}, 
-					{this.icon('forward')}, 
-					{this.icon('stop')}, 
-					{this.icon('repeat')}, 
-					, 
-					{this.icon('volume-down')}, 
-					{this.icon('volume-off')}
-				</Text>
-				<SongList songList={songs} navigation={navigation} play={this.play}/>
+				<View style={styles.icons}>
+					<View style={styles.iconContainer}>
+						 {playing ? this.icon('pause') : this.icon('play')} 
+						 {this.icon('forward')} 
+						 {this.icon('stop')}
+					 </View>
+				</View>
+				<SongList songList={songs} navigation={navigation} play={this.loadSong}/>
 			</View>)
 	}
 
@@ -129,11 +129,43 @@ class Player extends React.Component {
 export default Player
 
 const styles = StyleSheet.create({
-	app: {backgroundColor: '#000000'},
+	iconStyle: {
+	    paddingRight: 30,
+	    paddingLeft: 30,
+	  },
+	iconContainer:{
+		flexDirection: 'row',
+		flexWrap: 'wrap', // removing this makes button stop working
+	},
+	icons: {
+		flex:1,
+		marginBottom: 50,
+		alignItems: 'center',
+	},
+	app: {
+		backgroundColor: '#000000'
+	},
 	container: {
 		textAlign: 'center',
     	backgroundColor: '#000000',
 	    color: '#00ff00',
-	    margin: Constants.statusBarHeight,
+	    margin: 10,
 	},
 });
+
+/*
+
+marginLeft: 5,
+flex:1,
+//flexDirection: 'row',
+alignItems: 'center',
+alignContent: 'space-between',
+justifyContent: 'center',
+color: '#00ff00'
+tAlign: 'center',
+backgroundColor: '#000000',
+color: '#00ff00',
+margin: Constants.statusBarHeight,
+flexWrap: 'wrap',
+
+*/

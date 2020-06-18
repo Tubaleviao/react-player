@@ -1,6 +1,6 @@
 import React from 'react'
 //import Song from './song'
-import {StyleSheet, FlatList, SafeAreaView, Text, Button} from 'react-native'
+import {StyleSheet, FlatList, SafeAreaView, Text, Button, TouchableHighlight} from 'react-native'
 import Constants from 'expo-constants';
 
 const SongList = ({navigation, songList=[], play}) => {
@@ -8,7 +8,11 @@ const SongList = ({navigation, songList=[], play}) => {
 	return (
 		<SafeAreaView>
 			<FlatList data={songList}
-				renderItem={({item}) => (<Text style={styles.item} onPress={() => play(item)} >{item}</Text>)}
+				renderItem={({item}) => (
+					<TouchableHighlight 
+						onPress={() => play(item.substr(item.lastIndexOf('/')+1))} >
+						<Text style={styles.item}>{item}</Text>
+					</TouchableHighlight>)}
 				keyExtractor={item => String(++counter)}
 			/>
 		</SafeAreaView>

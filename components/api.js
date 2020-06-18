@@ -57,6 +57,42 @@ class Api {
 		 //await response.text()
 		return response
 	}
+
+	async signup(body){
+		let result
+		try{
+			console.log(body)
+			const response = await fetch(`https://tuba.work/join`, {
+				method: 'POST',
+				headers: {'Accept': 'application/json',
+							'Content-Type': 'application/json'},
+				body: body
+			})
+			const user = await response.json()
+			if(user.ok){
+				const {token, data: {username}} = user
+				result = {user: 
+					{username, token},
+					error: false
+				}
+			}else{
+				result = {error: user.msg}
+				console.log(`Error ho: ${user.msg}`)
+			}
+		}catch(e){
+			console.log(`Error he: ${e}`)
+			result = {error: "Authentication failed"}
+		}
+		return result
+	}
 }
 
 export default new Api() // Singleton
+
+/*
+
+JoshuaHoida
+vikaChugs
+whatever.wav
+
+*/

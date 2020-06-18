@@ -1,28 +1,11 @@
 import React from 'react'
-import { View, Text, TextInput, Button, AsyncStorage, StyleSheet, StatusBar, TouchableOpacity } from 'react-native'
+import { View, Text, TextInput, Button,StyleSheet, StatusBar, AsyncStorage } from 'react-native'
 import api from './api'
-import Constants from 'expo-constants'
 
-class Login extends React.Component {
-
-	constructor(props){
-		super(props)
-		props.navigation.setOptions({
-	      headerRight: () => (
-	      	<Button 
-                onPress={() => this.props.navigation.navigate('Signup')} 
-                color='#006600'
-                title="Sign up"/>
-	      ),
-	    });
-	}
+class Signup extends React.Component{
 
 	state = {
-		user: false,
-		loading: !(AsyncStorage.getItem('user')==null),
-		error: false,
-		username: "",
-		pass: "",				// get, set, remove
+		error: false
 	}
 
 	change = event => {
@@ -34,21 +17,20 @@ class Login extends React.Component {
 	submit = async event => {
 		this.setState({loading: true})
 		event.preventDefault()
-		const {username, pass} = this.state
-		const body = JSON.stringify({"username":username, "password": pass})
-		const user = await api.getToken(body)
+		const {username, email, pass} = this.state
+		const body = JSON.stringify({"username":username, "password": pass, "email": email})
+		const user = await api.signup(body)
 		if(!user.error){
 			AsyncStorage.setItem('user', JSON.stringify(user.user))
 			user.loading = false
-			user.songs = await api.getSongs(user.user)
 			this.setState(user)
-			this.props.navigation.replace('Player', {songs: user.songs, user: username})
+			this.props.navigation.replace('Player', {songs: [], user: username})
 		}else{
 			this.setState({error: user.error, loading: false})
 		}
 	}
 
-	render(){ 
+	render(){
 		const {error} = this.state
 		return (
 			<View style={styles.app}>
@@ -68,6 +50,15 @@ class Login extends React.Component {
 				<View style={styles.container}>
 					<TextInput 
 						style={styles.input} 
+						onChangeText={t => this.change({name: "email", value: t})} 
+						autoCompleteType="email" 
+						placeholderTextColor='#007700'
+						placeholder="Email..." />
+					
+				</View>
+				<View style={styles.container}>
+					<TextInput 
+						style={styles.input} 
 						onChangeText={t => this.change({name: "pass", value: t})} 
 						secureTextEntry={true} 
 						autoCompleteType="password" 
@@ -76,11 +67,13 @@ class Login extends React.Component {
 					
 				</View>
 				<Button color='#006600' onPress={this.submit} title="Submit" />
-			</View>) 
-	} 
+
+			</View>
+		)
+	}
 }
 
-export default Login
+export default Signup
 
 const styles = StyleSheet.create({
 	app: {
@@ -88,6 +81,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 		flexDirection: 'column',
 		alignItems: 'center',
+	},
+	error: {
+		textAlign: 'center',
+    	backgroundColor: '#000000',
+	    color: '#ff0000',
+	    margin: 10,
 	},
 	container: {
 		marginBottom: 15,
@@ -106,18 +105,10 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		margin: 15,
 	},
-	error: {
-		textAlign: 'center',
-    	backgroundColor: '#000000',
-	    color: '#ff0000',
-	    margin: 10,
-	},
-});
+})
 
-/*
+/* 
 
-	        <Button 
-                onPress={() => props.navigation.navigate('Signup')} 
-                color='#006600'
-                title="Sign up"/>
-                */
+this.submit
+
+*/

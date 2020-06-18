@@ -7,7 +7,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import Constants from 'expo-constants'
 import { Audio } from 'expo-av';
-import { AntDesign, FontAwesome } from '@expo/vector-icons'
+import { SimpleLineIcons, FontAwesome } from '@expo/vector-icons'
 //import SafeAreaView from 'react-native-safe-area-view'; // ???
 
 const Stack = createStackNavigator();
@@ -18,11 +18,16 @@ class Player extends React.Component {
 	constructor(props){
 		super(props)
 		this.mounted = false
+		props.navigation.setOptions({
+	      headerRight: () => (
+	        <SimpleLineIcons onPress={()=>alert("yo")} size={32} color='lime' name="menu"/>
+	      ),
+	    });
 	}
 
 	state = {
-		songs: this.props.route.params.songs,
-		user: this.props.route.params.user,
+		songs: this.props.route.params.songs || [],
+		user: this.props.route.params.user || 'None',
 		so: new Audio.Sound(),
 		trackPos: 0,
 	}
@@ -103,20 +108,30 @@ class Player extends React.Component {
 		return (
 			<View style={styles.app}>
 				<StatusBar barStyle="light-content" backgroundColor="#000000" />
-				{error && <Text>{error}</Text>}
-				<Text style={styles.container}>{music}</Text>
-				<Slider style={styles.container} 
-					onValueChange={this.sliding}
-					onSlidingComplete={v => this.setTrack(v)} 
-					value={trackPos}
-					maximumValue={maxPos} />
-				<View style={styles.icons}>
-					<View style={styles.iconContainer}>
-						 {playing ? this.icon('pause') : this.icon('play')} 
-						 {this.icon('forward')} 
-						 {this.icon('stop')}
-					 </View>
-				</View>
+				{error && <Text style={styles.error}>{error}</Text>}
+				{!songs.length ? (
+					<View>
+						<Text style={styles.container}> Try adding new songs! </Text>
+						<Button title="Upload" />
+					</View>
+				) : (
+					<View style={styles.container}>
+						<Text style={styles.container}>{music}</Text>
+						<Slider style={styles.container} 
+							onValueChange={this.sliding}
+							onSlidingComplete={v => this.setTrack(v)} 
+							value={trackPos}
+							maximumValue={maxPos} />
+						<View style={styles.icons}>
+							<View style={styles.iconContainer}>
+								 {playing ? this.icon('pause') : this.icon('play')} 
+								 {this.icon('forward')} 
+								 {this.icon('stop')}
+							 </View>
+						</View>
+					</View>
+				)}
+				
 				<SongList songList={songs} navigation={navigation} play={this.loadSong}/>
 			</View>)
 	}
@@ -143,6 +158,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	app: {
+		flex: 1,
 		backgroundColor: '#000000'
 	},
 	container: {

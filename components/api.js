@@ -54,6 +54,7 @@ class Api {
 		const options = {headers: {"token": user.token}}
 		let response = await fetch(`https://tuba.work/songs`, options)
 		if(response.ok) response = await response.json()
+		else response = []
 		 //await response.text()
 		return response
 	}

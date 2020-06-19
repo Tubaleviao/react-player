@@ -2,16 +2,20 @@ import React from 'react';
 import Login from './login'
 import SongList from './songList'
 import api from './api'
-import { AsyncStorage, View, Text, Button, StyleSheet, Slider, TouchableHighlight, StatusBar } from 'react-native'
+import { AsyncStorage, Linking, View, Text, Button, StyleSheet, Slider, TouchableHighlight, StatusBar } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import Constants from 'expo-constants'
 import { Audio } from 'expo-av';
 import { SimpleLineIcons, FontAwesome } from '@expo/vector-icons'
 //import SafeAreaView from 'react-native-safe-area-view'; // ???
+import * as DocumentPicker from 'expo-document-picker';
+const io = require('socket.io-client');
 
 const Stack = createStackNavigator();
 //Audio.setAudioModeAsync({staysActiveInBackground: true})
+
+const SocketEndpoint = 'https://tuba.work/player';
 
 class Player extends React.Component {
 
@@ -53,6 +57,14 @@ class Player extends React.Component {
 						color="lime" />
 				</TouchableHighlight>
 	)
+
+	pickFile = async () => {
+		const file = await DocumentPicker.getDocumentAsync({type: 'audio/mpeg'})
+		if(file.type === 'success'){
+			console.log(file)
+		}
+		console.log(file)
+	}
 
 	getNewSong = () => {
 		const {songs} = this.state
@@ -100,6 +112,18 @@ class Player extends React.Component {
 	componentDidMount() {
 		this.mounted = true
 		this.loadSong(this.getNewSong())
+		const socket = io(SocketEndpoint, {
+	      transports: ['websocket'],
+	    });
+
+	    socket.on('connect', () => {
+	      this.setState({ isConnected: true });
+	      console.log('connected!')
+	    });
+
+	    socket.on('ping', data => {
+	      this.setState(data);
+	    });
 	}
 
 	render(){
@@ -111,8 +135,13 @@ class Player extends React.Component {
 				{error && <Text style={styles.error}>{error}</Text>}
 				{!songs.length ? (
 					<View>
-						<Text style={styles.container}> Try adding new songs! </Text>
-						<Button title="Upload" />
+						<Text style={styles.container}> Try adding new songs!{"\n"} 
+							To select multiple files, try the webpage {"\n"}
+							<Text style={{color:'lime', textDecorationLine: 'underline',}} 
+								onPress={() => Linking.openURL('https://tuba.work/player')}>
+								tuba.work/player
+								</Text></Text>
+						<Button title="Upload" onPress={this.pickFile} />
 					</View>
 				) : (
 					<View style={styles.container}>

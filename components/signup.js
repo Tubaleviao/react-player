@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, TextInput, Button,StyleSheet, StatusBar, AsyncStorage } from 'react-native'
 import api from './api'
+import { CommonActions } from '@react-navigation/native';
 
 class Signup extends React.Component{
 
@@ -24,7 +25,11 @@ class Signup extends React.Component{
 			AsyncStorage.setItem('user', JSON.stringify(user.user))
 			user.loading = false
 			this.setState(user)
-			this.props.navigation.replace('Player', {songs: [], user: username})
+			const resetAction = CommonActions.reset({ index: 1,
+                routes: [{name: 'Player', params: {songs: [], user: username}}],
+            });
+            this.props.navigation.dispatch(resetAction); 
+			
 		}else{
 			this.setState({error: user.error, loading: false})
 		}

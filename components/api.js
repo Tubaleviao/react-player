@@ -1,9 +1,32 @@
+import React from 'react'
+import { AsyncStorage } from 'react-native'
+
 class Api {
+
+	async sendAudio(audio){
+		const form = new FormData()
+		let user = await AsyncStorage.getItem('user')
+		user = JSON.parse(user)
+		form.append("token", user.token)
+		form.append("audio", audio)
+		let res
+		try{
+			let response = await fetch(`https://tuba.work/audio/${user.username}`, {
+				method: 'POST',
+				headers: {'Content-Type': 'multipart/form-data',
+							'token': user.token},
+				body: form
+			})
+			res = await response.json()
+		}catch(err){
+			console.log('eer: ', err)
+		}
+		return res.song
+	}
 
 	async getToken(body){
 		let result
 		try{
-			console.log(body)
 			const response = await fetch(`https://tuba.work/jwt`, {
 				method: 'POST',
 				headers: {'Accept': 'application/json',

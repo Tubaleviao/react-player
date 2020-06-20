@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, 
+  DrawerItemList } from '@react-navigation/drawer';
 import Player from './components/player'
 import Login from './components/login'
 import Signup from './components/signup'
@@ -29,7 +30,9 @@ export default function App() {
 
   const drawerNav = menu =>{
     return (
-      <Drawer.Navigator drawerPosition="right">
+      <Drawer.Navigator drawerPosition="right" drawerStyle={{backgroundColor: '#000000'}}
+        drawerContentOptions={{activeTintColor: '#00ff00', labelStyle: {color:'#00ff00'}, 
+          style: { borderColor: '#008800', borderWidth: .5, borderRadius: 1}}} >
         <Drawer.Screen name="Profile" component={Player} options={({navigation}) => {
           menu( navigation ); return ({}); }} />
         <Drawer.Screen name="Logout" component={Player} />

@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text, TextInput, Button, AsyncStorage, StyleSheet, StatusBar, TouchableOpacity } from 'react-native'
 import api from './api'
 import Constants from 'expo-constants'
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 class Login extends React.Component {
 
@@ -44,7 +45,7 @@ class Login extends React.Component {
 	render(){ 
 		const {error} = this.state
 		return (
-			<View style={styles.app}>
+			<SafeAreaView style={styles.app}>
 				<StatusBar barStyle="light-content" backgroundColor="#000000" />
 				<Text style={styles.title}>Welcome</Text>
 				{error && <Text style={styles.error}>{error}</Text>}
@@ -68,7 +69,7 @@ class Login extends React.Component {
 						placeholder="Password..." />
 				</View>
 				<Button color='#006600' onPress={this.submit} title="Submit" />
-			</View>) 
+			</SafeAreaView>) 
 	} 
 }
 

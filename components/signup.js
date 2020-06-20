@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text, TextInput, Button,StyleSheet, StatusBar, AsyncStorage } from 'react-native'
 import api from './api'
 import { CommonActions } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 class Signup extends React.Component{
 
@@ -38,7 +39,7 @@ class Signup extends React.Component{
 	render(){
 		const {error} = this.state
 		return (
-			<View style={styles.app}>
+			<SafeAreaView style={styles.app}>
 				<StatusBar barStyle="light-content" backgroundColor="#000000" />
 				<Text style={styles.title}>Welcome</Text>
 				{error && <Text style={styles.error}>{error}</Text>}
@@ -73,7 +74,7 @@ class Signup extends React.Component{
 				</View>
 				<Button color='#006600' onPress={this.submit} title="Submit" />
 
-			</View>
+			</SafeAreaView>
 		)
 	}
 }

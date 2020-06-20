@@ -6,6 +6,8 @@ import Player from './components/player'
 import Login from './components/login'
 import Signup from './components/signup'
 import {Button} from 'react-native'
+import { SimpleLineIcons } from '@expo/vector-icons'
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator()
@@ -18,29 +20,47 @@ export default function App() {
     },
   }
 
-  const drawerNav = () =>
-    <Drawer.Navigator drawerPosition="right">
-      <Drawer.Screen name="Profile" component={Player} />
-      <Drawer.Screen name="Logout" component={Player} />
-      <Drawer.Screen name="Upload" component={Player} />
-    </Drawer.Navigator>
+  let nav
+
+  const savFun = navi => {
+    if((typeof navi) === "object") nav = navi
+    else if((typeof nav) === "object") nav.toggleDrawer()
+  }
+
+  const drawerNav = menu =>{
+    return (
+      <Drawer.Navigator drawerPosition="right">
+        <Drawer.Screen name="Profile" component={Player} options={({navigation}) => {
+          menu( navigation ); return ({}); }} />
+        <Drawer.Screen name="Logout" component={Player} />
+        <Drawer.Screen name="Upload" component={Player} />
+      </Drawer.Navigator>
+    )
+  }
+    
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Login" component={Login} options={ ({navigation}) => ({
-         ...defaultOption,
-         headerRight: () => (
-            <Button onPress={() => navigation.navigate('Signup')} 
-                  color='#006600'
-                  title="Sign up"/>
-          ),
-        })} />
-        <Stack.Screen name="Player" children={drawerNav} />
-        <Stack.Screen name="Signup" component={Signup} options={defaultOption} />
-        <Stack.Screen name="Profile" component={Player} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Login" component={Login} options={ ({navigation}) => ({
+           ...defaultOption,
+           headerRight: () => (
+              <Button onPress={() => navigation.navigate('Signup')} 
+                color='#006600' title="Sign up"/>
+            ),
+          })} />
+          <Stack.Screen name="Player" children={() => drawerNav(savFun)} options={({navigation}) => ({
+            ...defaultOption,
+            headerRight: () => (
+              <SimpleLineIcons onPress={() => savFun()} size={32} color='lime' name="menu"/>
+            ),
+          })} />
+          <Stack.Screen name="Signup" component={Signup} options={defaultOption} />
+          <Stack.Screen name="Profile" component={Player} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
 
   );
 }

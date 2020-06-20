@@ -8,7 +8,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import Constants from 'expo-constants'
 import { Audio } from 'expo-av';
 import { SimpleLineIcons, FontAwesome } from '@expo/vector-icons'
-//import SafeAreaView from 'react-native-safe-area-view'; // ???
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 
 const Stack = createStackNavigator();
@@ -19,11 +19,6 @@ class Player extends React.Component {
 	constructor(props){
 		super(props)
 		this.mounted = false
-		props.navigation.setOptions({
-	      headerRight: () => (
-	        <SimpleLineIcons onPress={()=>alert("yo")} size={32} color='lime' name="menu"/>
-	      ),
-	    });
 	}
 
 	state = {
@@ -119,7 +114,7 @@ class Player extends React.Component {
 		const {error, songs, playing, music, obs, trackPos, maxPos} = this.state
 		const {navigation} = this.props
 		return (
-			<View style={styles.app}>
+			<SafeAreaView style={styles.app}>
 				<StatusBar barStyle="light-content" backgroundColor="#000000" />
 				{error && <Text style={styles.error}>{error}</Text>}
 				{!songs.length ? (
@@ -150,7 +145,7 @@ class Player extends React.Component {
 					</View>
 				)}
 				<SongList songList={songs} navigation={navigation} play={this.loadSong}/>
-			</View>)
+			</SafeAreaView>)
 	}
 
 	componentWillUnmount() {

@@ -18,7 +18,11 @@ class Player extends React.Component {
 
 	constructor(props){
 		super(props)
+		const {navigation} = props
 		this.mounted = false
+		// the method bellow only works with function
+		// so now I'm changing this class to funciton, let's do it!
+		// React.useEffect(() => navigation.addListener('focus', () => console.log('hehe')), []);
 	}
 
 	state = {
@@ -50,16 +54,8 @@ class Player extends React.Component {
 				</TouchableHighlight>
 	)
 
-	pickFile = async () => {
-		const file = await DocumentPicker.getDocumentAsync({type: 'audio/mpeg'})
-		if(file.type === 'success'){
-			file.type = 'audio/mpeg'
-			const worked = await api.sendAudio(file)
-			if(worked){
-				if(this.state.songs.length === 0) this.loadSong(worked)
-				this.setState({songs: [...this.state.songs, worked]})
-			}
-		}
+	addSong = async song => {
+
 	}
 
 	getNewSong = () => {
@@ -113,6 +109,10 @@ class Player extends React.Component {
 	render(){
 		const {error, songs, playing, music, obs, trackPos, maxPos} = this.state
 		const {navigation} = this.props
+
+		
+
+		
 		return (
 			<SafeAreaView style={styles.app}>
 				<StatusBar barStyle="light-content" backgroundColor="#000000" />

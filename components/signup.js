@@ -27,7 +27,7 @@ class Signup extends React.Component{
 			user.loading = false
 			this.setState(user)
 			const resetAction = CommonActions.reset({ index: 1,
-                routes: [{name: 'Player', params: {songs: [], user: username}}],
+                routes: [{name: 'Home', params: {songs: [], user: username}}],
             });
             this.props.navigation.dispatch(resetAction); 
 			

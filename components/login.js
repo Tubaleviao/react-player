@@ -35,8 +35,8 @@ class Login extends React.Component {
 			user.loading = false
 			user.songs = await api.getSongs(user.user)
 			this.setState(user)
-			this.props.navigation.replace('Player', {
-				screen: "Profile", params: {songs: user.songs, user: username}})
+			this.props.navigation.replace('Home', {
+				screen: "Player", params: {songs: user.songs, user: username}})
 		}else{
 			this.setState({error: user.error, loading: false})
 		}

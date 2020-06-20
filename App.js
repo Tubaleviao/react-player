@@ -9,6 +9,7 @@ import Signup from './components/signup'
 import {Button} from 'react-native'
 import { SimpleLineIcons } from '@expo/vector-icons'
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Upload from './components/upload'
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator()
@@ -33,10 +34,12 @@ export default function App() {
       <Drawer.Navigator drawerPosition="right" drawerStyle={{backgroundColor: '#000000'}}
         drawerContentOptions={{activeTintColor: '#00ff00', labelStyle: {color:'#00ff00'}, 
           style: { borderColor: '#008800', borderWidth: .5, borderRadius: 1}}} >
-        <Drawer.Screen name="Profile" component={Player} options={({navigation}) => {
+
+        <Drawer.Screen name="Player" component={Player} options={({navigation}) => {
           menu( navigation ); return ({}); }} />
+        <Drawer.Screen name="Upload" component={Upload} />
         <Drawer.Screen name="Logout" component={Player} />
-        <Drawer.Screen name="Upload" component={Player} />
+        
       </Drawer.Navigator>
     )
   }
@@ -53,8 +56,9 @@ export default function App() {
                 color='#006600' title="Sign up"/>
             ),
           })} />
-          <Stack.Screen name="Player" children={() => drawerNav(savFun)} options={({navigation}) => ({
+          <Stack.Screen name="Home" children={() => drawerNav(savFun)} options={({navigation}) => ({
             ...defaultOption,
+            headerTitle: "Tuba Player",
             headerRight: () => (
               <SimpleLineIcons onPress={() => savFun()} size={32} color='lime' name="menu"/>
             ),

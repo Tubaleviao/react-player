@@ -59,8 +59,7 @@ function Player(props){
 	const setTrack = v => {so.setPositionAsync(v); setSliding(false); setTrackPos(v)}
 	// this[name]
 	const icon = name => (<TouchableHighlight onPress={name} activeOpacity={0.4}>
-		<FontAwesome style={styles.iconStyle}
-			name={name.name} size={32} color="lime" />
+		<FontAwesome style={styles.iconStyle} name={name.name} size={32} color="lime" />
 	</TouchableHighlight>)
 
 	const getNewSong = () => {
@@ -88,9 +87,6 @@ function Player(props){
 		if(st && st.isLoaded){
 			const newMusic = st.uri.split('/')[st.uri.split('/').length-1]
 			const newPos = st.positionMillis
-			//console.log(st.volume)
-			//console.log(st.isPlaying, playing, st.isPlaying !== playing)
-			//if(playing!==st.isPlaying) setPlaying(playing => !playing)
 			if(music!==newMusic) setMusic(newMusic)
 			if(trackPos !== newPos) setTrackPos(newPos)
 			if(maxPos!==st.durationMillis) setMaxPos(st.durationMillis)
@@ -107,8 +103,9 @@ function Player(props){
 	useEffect(() => {
 		setMounted(true)
 		loadSong(getNewSong())
-
-		return function cleanup(){ setMounted(false)}
+		return function cleanup(){ 
+			setMounted(false)
+		}
 	}, [])
 
 	return (

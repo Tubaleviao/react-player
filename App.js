@@ -10,6 +10,17 @@ import {Button} from 'react-native'
 import { SimpleLineIcons } from '@expo/vector-icons'
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Upload from './components/upload'
+import { CommonActions } from '@react-navigation/native';
+import {View} from 'react-native'
+import Testing from './components/testing'
+import Testing2 from './components/testing2'
+
+const Logout = ({navigation}) => {
+  const out = () => navigation.dispatch(
+    CommonActions.reset({ index: 1,routes: [{name: 'Login'}],})
+  )
+  return (<View>{out()}</View>)
+} 
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator()
@@ -38,8 +49,9 @@ export default function App() {
         <Drawer.Screen name="Player" component={Player} options={({navigation}) => {
           menu( navigation ); return ({}); }} />
         <Drawer.Screen name="Upload" component={Upload} />
-        <Drawer.Screen name="Logout" component={Player} />
-        
+        <Drawer.Screen name="Logout" component={Logout} />
+        <Drawer.Screen name="Testing" component={Testing} />
+        <Drawer.Screen name="Testing2" component={Testing2} />
       </Drawer.Navigator>
     )
   }

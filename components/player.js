@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; // {useState, useEffect}
 import Login from './login'
 import SongList from './songList'
 import api from './api'
@@ -10,147 +10,130 @@ import { Audio } from 'expo-av';
 import { SimpleLineIcons, FontAwesome } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
+import Upload from './upload'
+import { Notifications } from 'expo';
 
 const Stack = createStackNavigator();
 //Audio.setAudioModeAsync({staysActiveInBackground: true})
+Audio.setAudioModeAsync({
+	staysActiveInBackground: true,
+	shouldDuckAndroid: true,
+	playThroughEarpieceAndroid: true,
+	allowsRecordingIOS: true,
+	playsInSilentModeIOS: true,
+})
 
-class Player extends React.Component {
+function Player(props){
 
-	constructor(props){
-		super(props)
-		const {navigation} = props
-		this.mounted = false
-		// the method bellow only works with function
-		// so now I'm changing this class to funciton, let's do it!
-		// React.useEffect(() => navigation.addListener('focus', () => console.log('hehe')), []);
-	}
+	const {useState, useEffect} = React
+	const {navigation} = props
 
-	state = {
-		songs: this.props.route.params.songs || [],
-		user: this.props.route.params.user || 'None',
-		so: new Audio.Sound(),
-		trackPos: 0,
-	}
+	useEffect(() => navigation.addListener('focus', async () =>{
+		const song = await AsyncStorage.getItem('newSong')
+		if(song){
+			if(songs.length === 0) loadSong(song)
+			setSongs([song, ...songs ])
+			await AsyncStorage.removeItem('newSong')
+		}
+	}), [])
 
-	load = async () => this.setState({loading: true})
-	play =  async() => this.state.so.playAsync()
-	stop = async () => this.state.so.stopAsync()
-	pause = async () => this.state.so.pauseAsync()
+	const [songs, setSongs] = useState(props.route.params.songs || []) 
+	const [user, setUser] = useState(props.route.params.user || 'None')
+	const [so, setSo] = useState(new Audio.Sound())
+	const [trackPos, setTrackPos] = useState(0)
+	const [sliding, setSliding] = useState(false)
+	const [music, setMusic] = useState('')
+	const [maxPos, setMaxPos] = useState(0) // mounted
+	const [playing, setPlaying] = useState(false)
+	const [error, setError] = useState(false)
+	const [mounted, setMounted] = useState(false)
+	
+	const play =  async() => {so.playAsync(); setPlaying(true)}
+	const stop = async () => {so.stopAsync(); setPlaying(false)}
+	const pause = async () => {so.pauseAsync(); setPlaying(false)}
 
 	//backward = async () => this.state.so.pauseAsync()
-	forward = async () => this.loadSong(this.getNewSong())
-	repeat = async () => this.state.so.pauseAsync()
-	sliding = async () => {if(!this.state.sliding) this.setState({sliding: true})}
+	const forward = async () => loadSong(getNewSong())
+	const repeat = async () => so.pauseAsync()
 	//random = async () => this.state.so.pauseAsync()
-	setTrack = v => {this.state.so.setPositionAsync(v); this.setState({sliding: false, trackPos: v})}
+	const setTrack = v => {so.setPositionAsync(v); setSliding(false); setTrackPos(v)}
+	// this[name]
+	const icon = name => (<TouchableHighlight onPress={name} activeOpacity={0.4}>
+		<FontAwesome style={styles.iconStyle}
+			name={name.name} size={32} color="lime" />
+	</TouchableHighlight>)
 
-	icon = name => (
-				<TouchableHighlight onPress={this[name]} activeOpacity={0.4}>
-					<FontAwesome 
-						style={styles.iconStyle}
-						name={name} 
-						size={32} 
-						color="lime" />
-				</TouchableHighlight>
-	)
-
-	addSong = async song => {
-
-	}
-
-	getNewSong = () => {
-		const {songs} = this.state
+	const getNewSong = () => {
 		let len = songs.length
 		return songs[Math.floor(Math.random()*len)]
 	}
 
-	loadSong = async song => {
+	const loadSong = async song => {
 		if(song){
 			try {
-				const {so, user} = this.state
 				const uri = `https://tuba.work/users/${user}/${song}`
 				await so.unloadAsync()
-				await so.setOnPlaybackStatusUpdate(this.updatePlayer)
+				await so.setOnPlaybackStatusUpdate(updatePlayer)
 				await so.loadAsync({uri: uri})
 				await so.setStatusAsync({
 					progressUpdateIntervalMillis: 1100, 
 					shouldPlay: true,
 				})
+				setPlaying(true)
 			} catch (error) { console.log(error) }
 		}
 	}
 
-	updatePlayer = async st => {
+	const updatePlayer = async st => {
 		if(st && st.isLoaded){
 			const newMusic = st.uri.split('/')[st.uri.split('/').length-1]
 			const newPos = st.positionMillis
-			const {playing, music, trackPos, maxPos} = this.state
-			const toUpdate = {}
-			if(playing!==st.isPlaying) toUpdate.playing = st.isPlaying
-			if(music!==newMusic) toUpdate.music = newMusic
-			if(newPos-trackPos >= 999) toUpdate.trackPos = newPos
-			if(maxPos!==st.durationMillis) toUpdate.maxPos = st.durationMillis
-			if(st.didJustFinish) toUpdate.trackPos = 0
-			this.mounted && Object.keys(toUpdate).length && this.setState(toUpdate)
-			if(st.didJustFinish) this.loadSong(this.getNewSong())
+			//console.log(st.volume)
+			//console.log(st.isPlaying, playing, st.isPlaying !== playing)
+			//if(playing!==st.isPlaying) setPlaying(playing => !playing)
+			if(music!==newMusic) setMusic(newMusic)
+			if(trackPos !== newPos) setTrackPos(newPos)
+			if(maxPos!==st.durationMillis) setMaxPos(st.durationMillis)
+			if(st.didJustFinish) setTrackPos(0)
+			if(st.didJustFinish) loadSong(getNewSong())
 		}
 	}
 
-	shouldComponentUpdate(np, nt){
+	/*shouldComponentUpdate(np, nt){ // React.memo ??
 		if(nt.sliding) return false
 		else return true
-	}
+	}*/
 
-	componentDidMount() {
-		this.mounted = true
-		this.loadSong(this.getNewSong())
-	}
+	useEffect(() => {
+		setMounted(true)
+		loadSong(getNewSong())
 
-	render(){
-		const {error, songs, playing, music, obs, trackPos, maxPos} = this.state
-		const {navigation} = this.props
+		return function cleanup(){ setMounted(false)}
+	}, [])
 
-		
-
-		
-		return (
-			<SafeAreaView style={styles.app}>
-				<StatusBar barStyle="light-content" backgroundColor="#000000" />
-				{error && <Text style={styles.error}>{error}</Text>}
-				{!songs.length ? (
-					<View>
-						<Text style={styles.container}> Try adding new songs!{"\n"} 
-							To select multiple files, try the webpage {"\n"}
-							<Text style={{color:'lime', textDecorationLine: 'underline',}} 
-								onPress={() => Linking.openURL('https://tuba.work/player')}>
-								tuba.work/player
-								</Text></Text>
-						<Button title="Upload" onPress={this.pickFile} />
+	return (
+		<SafeAreaView style={styles.app}>
+			<StatusBar barStyle="light-content" backgroundColor="#000000" />
+			{error && <Text style={styles.error}>{error}</Text>}
+			{!songs.length ? ( <Upload /> ) : (
+				<View style={styles.container}>
+					<Text style={styles.container}>{music}</Text>
+					<Slider style={styles.container} 
+						onValueChange={() => !sliding ? setSliding(true) : true}
+						onSlidingComplete={v => setTrack(v)} 
+						value={trackPos}
+						maximumValue={maxPos} />
+					<View style={styles.icons}>
+						<View style={styles.iconContainer}>
+							{playing ? icon(pause) : icon(play)} 
+							{icon(forward)} 
+							{icon(stop)}
+						 </View>
 					</View>
-				) : (
-					<View style={styles.container}>
-						<Text style={styles.container}>{music}</Text>
-						<Slider style={styles.container} 
-							onValueChange={this.sliding}
-							onSlidingComplete={v => this.setTrack(v)} 
-							value={trackPos}
-							maximumValue={maxPos} />
-						<View style={styles.icons}>
-							<View style={styles.iconContainer}>
-								 {playing ? this.icon('pause') : this.icon('play')} 
-								 {this.icon('forward')} 
-								 {this.icon('stop')}
-							 </View>
-						</View>
-					</View>
-				)}
-				<SongList songList={songs} navigation={navigation} play={this.loadSong}/>
-			</SafeAreaView>)
-	}
-
-	componentWillUnmount() {
-	   this.mounted = false
-	}
+				</View>
+			)}
+			<SongList songList={songs} navigation={navigation} play={loadSong}/>
+		</SafeAreaView>)
 }
 
 export default Player

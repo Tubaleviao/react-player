@@ -15,7 +15,7 @@ class Login extends React.Component {
 		loading: !(AsyncStorage.getItem('user')==null), // async
 		error: false,
 		username: "",
-		pass: "",				// get, set, remove 
+		pass: "", // get, set, remove 
 	}
 
 	change = event => {

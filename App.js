@@ -13,7 +13,9 @@ import Upload from './components/upload'
 import { CommonActions } from '@react-navigation/native';
 import {View} from 'react-native'
 import Testing from './components/testing'
-import Testing2 from './components/testing2'
+//import Testing2 from './components/testing2'
+// I may have to detach expo from my app for showing notification controls
+// https://github.com/tanguyantoine/react-native-music-control
 
 const Logout = ({navigation}) => {
   const out = () => navigation.dispatch(
@@ -51,12 +53,10 @@ export default function App() {
         <Drawer.Screen name="Upload" component={Upload} />
         <Drawer.Screen name="Logout" component={Logout} />
         <Drawer.Screen name="Testing" component={Testing} />
-        <Drawer.Screen name="Testing2" component={Testing2} />
       </Drawer.Navigator>
     )
   }
     
-
   return (
     <SafeAreaProvider>
       <NavigationContainer>

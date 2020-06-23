@@ -21,7 +21,7 @@ class Api {
 		}catch(err){
 			console.log('eer: ', err)
 		}
-		return res.song
+		return {ok: res.ok, song: res.song, msg: res.msg}
 	}
 
 	async getToken(body){

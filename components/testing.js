@@ -28,36 +28,20 @@ export default class Testing extends React.Component {
     }
 
     if (Platform.OS === 'android') {
-      Notifications.createChannelAndroidAsync('default', {
-        name: 'default',
+      Notifications.createChannelAndroidAsync('chan', {
+        name: 'chan',
         priority: 'max',
+        sound: false,
+        vibrate: false,
       });
     }
-  };
-
-  componentDidMount() {
-  	Notifications.createCategoryAsync('outside', [
-	  {
-	    actionId: 'pause',
-	    buttonTitle: 'Pause',
-	    isDestructive: true,
-	    isAuthenticationRequired: false,
-	  },
-	  {
-	    actionId: 'forward',
-	    buttonTitle: 'Forward',
-	    isDestructive: false,
-	    isAuthenticationRequired: false,
-	  },
-	])
-
-    this.registerForPushNotificationsAsync();
-    this._notificationSubscription = Notifications.addListener(this._handleNotification);
   }
 
-  _handleNotification = notification => {
-    this.setState({ notification: notification });
-  };
+  componentDidMount() {
+
+    this.registerForPushNotificationsAsync();
+    this._notificationSubscription = Notifications.addListener(not => {});
+  }
 
   render() {
     return (
@@ -73,8 +57,9 @@ export default class Testing extends React.Component {
         </View>
         <Button title={'Press to Send Notification'} onPress={
         	() => Notifications.presentLocalNotificationAsync({
-        		title:'hello', categoryId:'outside', body: 'something', 
-        		android:{sticky: true}, data: {a:'a',b:'b'} })} />
+        		title:'hello', body: 'something', 
+        		android:{channelId: 'chan', sticky: true},
+            ios: {_displayInForeground: true} })} />
       </View>
     );
   }

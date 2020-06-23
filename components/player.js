@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import Upload from './upload'
 import { Notifications } from 'expo';
+import * as Permissions from 'expo-permissions';
+import {AppState} from 'react-native';
 
 const Stack = createStackNavigator();
 //Audio.setAudioModeAsync({staysActiveInBackground: true})
@@ -37,6 +39,10 @@ function Player(props){
 		}
 	}), [])
 
+	useEffect(() => navigation.addListener('blur', async () =>{
+		
+	}), [])
+
 	const [songs, setSongs] = useState(props.route.params.songs || []) 
 	const [user, setUser] = useState(props.route.params.user || 'None')
 	const [so, setSo] = useState(new Audio.Sound())
@@ -47,6 +53,34 @@ function Player(props){
 	const [playing, setPlaying] = useState(false)
 	const [error, setError] = useState(false)
 	const [mounted, setMounted] = useState(false)
+
+	const registerForPushNotificationsAsync = async () => {
+	    if (Constants.isDevice) {
+	      const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+
+	      let finalStatus = existingStatus;
+	      if (existingStatus !== 'granted') {
+	        const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+	        finalStatus = status;
+	      }
+	      if (finalStatus !== 'granted') {
+	        alert('Failed to get push token for push notification!');
+	        return;
+	      }
+	    } else {
+	      alert('Must use physical device for Push Notifications');
+	    }
+
+	    if (Platform.OS === 'android') {
+	      Notifications.createChannelAndroidAsync('main', {
+	        name: 'main',
+	        priority: 'max',
+	        sound: false,
+	        vibrate: false,
+	      });
+	    }
+	  }
+	const _notificationSubscription = Notifications.addListener(not => {});
 	
 	const play =  async() => {so.playAsync(); setPlaying(true)}
 	const stop = async () => {so.stopAsync(); setPlaying(false)}
@@ -70,6 +104,8 @@ function Player(props){
 	const loadSong = async song => {
 		if(song){
 			try {
+				AppState.removeEventListener('change', _handleAppStateChange(music))
+				AppState.addEventListener('change', _handleAppStateChange(song))
 				const uri = `https://tuba.work/users/${user}/${song}`
 				await so.unloadAsync()
 				await so.setOnPlaybackStatusUpdate(updatePlayer)
@@ -79,6 +115,7 @@ function Player(props){
 					shouldPlay: true,
 				})
 				setPlaying(true)
+				
 			} catch (error) { console.log(error) }
 		}
 	}
@@ -100,8 +137,22 @@ function Player(props){
 		else return true
 	}*/
 
+	const _handleAppStateChange = song => nextState => {
+		if(nextState==='background'){
+			Notifications.presentLocalNotificationAsync({
+        		title: 'Now playing', body: song, 
+        		android: { channelId: 'main', sticky: true, icon:'https://tuba.work/img/icon.ico', color:'#00ff00' },
+            	ios: { _displayInForeground: true } })
+		}else{
+			Notifications.dismissAllNotificationsAsync()
+		}
+		console.log(nextState)
+	}
+	
 	useEffect(() => {
+		//AppState.addEventListener('change', _handleAppStateChange.bind({music: getSong}));
 		setMounted(true)
+		registerForPushNotificationsAsync()
 		loadSong(getNewSong())
 		return function cleanup(){ 
 			setMounted(false)
@@ -157,6 +208,12 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
     	backgroundColor: '#000000',
 	    color: '#00ff00',
+	    margin: 10,
+	},
+	error: {
+		textAlign: 'center',
+    	backgroundColor: '#000000',
+	    color: '#ff0000',
 	    margin: 10,
 	},
 });

@@ -39,9 +39,7 @@ function Player(props){
 		}
 	}), [])
 
-	useEffect(() => navigation.addListener('blur', async () =>{
-		
-	}), [])
+	useEffect(() => navigation.addListener('blur', async () =>{}), [])
 
 	const [songs, setSongs] = useState(props.route.params.songs || []) 
 	const [user, setUser] = useState(props.route.params.user || 'None')
@@ -104,8 +102,8 @@ function Player(props){
 	const loadSong = async song => {
 		if(song){
 			try {
-				AppState.removeEventListener('change', _handleAppStateChange(music))
-				AppState.addEventListener('change', _handleAppStateChange(song))
+				AppState.removeEventListener('change', _handleAppStateChange)
+				AppState.addEventListener('change', _handleAppStateChange)
 				const uri = `https://tuba.work/users/${user}/${song}`
 				await so.unloadAsync()
 				await so.setOnPlaybackStatusUpdate(updatePlayer)
@@ -121,7 +119,7 @@ function Player(props){
 	}
 
 	const updatePlayer = async st => {
-		if(st && st.isLoaded){
+		if(st && mounted && st.isLoaded){
 			const newMusic = st.uri.split('/')[st.uri.split('/').length-1]
 			const newPos = st.positionMillis
 			if(music!==newMusic) setMusic(newMusic)
@@ -137,10 +135,10 @@ function Player(props){
 		else return true
 	}*/
 
-	const _handleAppStateChange = song => nextState => {
+	const _handleAppStateChange = nextState => {
 		if(nextState==='background'){
 			Notifications.presentLocalNotificationAsync({
-        		title: 'Now playing', body: song, 
+        		title: 'Now playing', body: music, 
         		android: { channelId: 'main', sticky: true, icon:'https://tuba.work/img/icon.ico', color:'#00ff00' },
             	ios: { _displayInForeground: true } })
 		}else{
@@ -150,12 +148,15 @@ function Player(props){
 	}
 	
 	useEffect(() => {
-		//AppState.addEventListener('change', _handleAppStateChange.bind({music: getSong}));
 		setMounted(true)
 		registerForPushNotificationsAsync()
 		loadSong(getNewSong())
+		AppState.addEventListener('change', _handleAppStateChange)
 		return function cleanup(){ 
 			setMounted(false)
+			console.log(music)
+			so.unloadAsync()
+			AppState.removeEventListener('change', _handleAppStateChange)
 		}
 	}, [])
 

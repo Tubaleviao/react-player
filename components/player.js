@@ -1,4 +1,4 @@
-import React from 'react'; // {useState, useEffect}
+import React from 'react'
 import Login from './login'
 import SongList from './songList'
 import api from './api'
@@ -50,7 +50,7 @@ function Player(props){
 	const [maxPos, setMaxPos] = useState(0) // mounted
 	const [playing, setPlaying] = useState(false)
 	const [error, setError] = useState(false)
-	const [mounted, setMounted] = useState(false)
+	const [mounted, setMounted] = useState(true)
 
 	const registerForPushNotificationsAsync = async () => {
 	    if (Constants.isDevice) {
@@ -99,30 +99,28 @@ function Player(props){
 		return songs[Math.floor(Math.random()*len)]
 	}
 
+	let toRemove
+
 	const loadSong = async song => {
 		if(song){
 			try {
-				AppState.removeEventListener('change', _handleAppStateChange)
-				AppState.addEventListener('change', _handleAppStateChange)
+				setMusic(song)
 				const uri = `https://tuba.work/users/${user}/${song}`
 				await so.unloadAsync()
-				await so.setOnPlaybackStatusUpdate(updatePlayer)
+				so.setOnPlaybackStatusUpdate(updatePlayer)
 				await so.loadAsync({uri: uri})
 				await so.setStatusAsync({
 					progressUpdateIntervalMillis: 1100, 
 					shouldPlay: true,
 				})
 				setPlaying(true)
-				
 			} catch (error) { console.log(error) }
 		}
 	}
 
 	const updatePlayer = async st => {
 		if(st && mounted && st.isLoaded){
-			const newMusic = st.uri.split('/')[st.uri.split('/').length-1]
 			const newPos = st.positionMillis
-			if(music!==newMusic) setMusic(newMusic)
 			if(trackPos !== newPos) setTrackPos(newPos)
 			if(maxPos!==st.durationMillis) setMaxPos(st.durationMillis)
 			if(st.didJustFinish) setTrackPos(0)
@@ -130,33 +128,29 @@ function Player(props){
 		}
 	}
 
-	/*shouldComponentUpdate(np, nt){ // React.memo ??
-		if(nt.sliding) return false
-		else return true
-	}*/
-
-	const _handleAppStateChange = nextState => {
+	const func = nextState => { // _handleAppStateChange
 		if(nextState==='background'){
 			Notifications.presentLocalNotificationAsync({
-        		title: 'Now playing', body: music, 
+        		title: 'Now playing', body: 'Press to go back to the app', 
         		android: { channelId: 'main', sticky: true, icon:'https://tuba.work/img/icon.ico', color:'#00ff00' },
             	ios: { _displayInForeground: true } })
 		}else{
 			Notifications.dismissAllNotificationsAsync()
 		}
-		console.log(nextState)
 	}
 	
 	useEffect(() => {
 		setMounted(true)
 		registerForPushNotificationsAsync()
+		
 		loadSong(getNewSong())
-		AppState.addEventListener('change', _handleAppStateChange)
+		AppState.addEventListener('change', func)
 		return function cleanup(){ 
 			setMounted(false)
 			console.log(music)
 			so.unloadAsync()
-			AppState.removeEventListener('change', _handleAppStateChange)
+			Notifications.dismissAllNotificationsAsync()
+			AppState.removeEventListener('change', func)
 		}
 	}, [])
 

@@ -106,11 +106,3 @@ const styles = StyleSheet.create({
 	    margin: 10,
 	},
 });
-
-/*
-
-	        <Button 
-                onPress={() => props.navigation.navigate('Signup')} 
-                color='#006600'
-                title="Sign up"/>
-                */

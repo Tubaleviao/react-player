@@ -1,35 +1,4 @@
 {
-  "expo": {
-    "name": "Tuba Player",
-    "slug": "tuba-player",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.ico",
-    "splash": {
-      "image": "./assets/splash2.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "UIBackgroundModes": ["audio"]
-      }
-    },
-    "android":{
-      "package": "work.tuba.player",
-      "versionCode": 1
-    }
-  }
+  "name": "testing",
+  "displayName": "testing"
 }

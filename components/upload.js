@@ -2,7 +2,7 @@ import React from 'react'
 import { Button, StyleSheet, Text, AsyncStorage, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Api from './api'
-import * as DocumentPicker from 'expo-document-picker';
+//import * as DocumentPicker from 'expo-document-picker';
 
 class Upload extends React.Component{
 
@@ -14,7 +14,7 @@ class Upload extends React.Component{
 
 	pickSong = async () => {
 		this.setState({loading: true})
-		const file = await DocumentPicker.getDocumentAsync({type: 'audio/mpeg'})
+		const file = {} //await DocumentPicker.getDocumentAsync({type: 'audio/mpeg'})
 		if(file.type === 'success'){
 			file.type = 'audio/mpeg'
 			const worked = await Api.sendAudio(file)

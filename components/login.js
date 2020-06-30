@@ -1,8 +1,6 @@
 import React from 'react'
-import { View, Text, TextInput, Button, AsyncStorage, StyleSheet, StatusBar, TouchableOpacity } from 'react-native'
+import { SafeAreaView, View, Text, TextInput, Button, AsyncStorage, StyleSheet, StatusBar} from 'react-native'
 import api from './api'
-import Constants from 'expo-constants'
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 class Login extends React.Component {
 

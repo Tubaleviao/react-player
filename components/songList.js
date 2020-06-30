@@ -1,7 +1,6 @@
 import React from 'react'
 //import Song from './song'
-import {StyleSheet, FlatList, SafeAreaView, Text, Button, TouchableHighlight} from 'react-native'
-import Constants from 'expo-constants';
+import {StyleSheet, FlatList, SafeAreaView, Text, TouchableHighlight} from 'react-native'
 
 const SongList = ({navigation, songList=[], play}) => {
 	let counter=0

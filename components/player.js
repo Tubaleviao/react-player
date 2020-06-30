@@ -1,29 +1,15 @@
 import React from 'react'
-import Login from './login'
 import SongList from './songList'
-import api from './api'
-import { AsyncStorage, Linking, View, Text, Button, StyleSheet, Slider, TouchableHighlight, StatusBar } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
+import { SafeAreaView, AppState, AsyncStorage, View, Text, StyleSheet, Slider, TouchableHighlight, StatusBar } from 'react-native'
 import { createStackNavigator } from '@react-navigation/stack'
-import Constants from 'expo-constants'
-import { Audio } from 'expo-av';
-import { SimpleLineIcons, FontAwesome } from '@expo/vector-icons'
-import { SafeAreaView } from 'react-native-safe-area-context';
-import * as DocumentPicker from 'expo-document-picker';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import Upload from './upload'
-import { Notifications } from 'expo';
-import * as Permissions from 'expo-permissions';
-import {AppState} from 'react-native';
+// https://github.com/tanguyantoine/react-native-music-control
+import mc from 'react-native-music-control';
+// https://react-native-track-player.js.org/getting-started/
+import tp from 'react-native-track-player';
 
 const Stack = createStackNavigator();
-//Audio.setAudioModeAsync({staysActiveInBackground: true})
-Audio.setAudioModeAsync({
-	staysActiveInBackground: true,
-	shouldDuckAndroid: true,
-	playThroughEarpieceAndroid: true,
-	allowsRecordingIOS: true,
-	playsInSilentModeIOS: true,
-})
 
 function Player(props){
 
@@ -43,7 +29,6 @@ function Player(props){
 
 	const [songs, setSongs] = useState(props.route.params.songs || []) 
 	const [user, setUser] = useState(props.route.params.user || 'None')
-	const [so, setSo] = useState(new Audio.Sound())
 	const [trackPos, setTrackPos] = useState(0)
 	const [sliding, setSliding] = useState(false)
 	const [music, setMusic] = useState('')
@@ -51,47 +36,19 @@ function Player(props){
 	const [playing, setPlaying] = useState(false)
 	const [error, setError] = useState(false)
 	const [mounted, setMounted] = useState(true)
-
-	const registerForPushNotificationsAsync = async () => {
-	    if (Constants.isDevice) {
-	      const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
-
-	      let finalStatus = existingStatus;
-	      if (existingStatus !== 'granted') {
-	        const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
-	        finalStatus = status;
-	      }
-	      if (finalStatus !== 'granted') {
-	        alert('Failed to get push token for push notification!');
-	        return;
-	      }
-	    } else {
-	      alert('Must use physical device for Push Notifications');
-	    }
-
-	    if (Platform.OS === 'android') {
-	      Notifications.createChannelAndroidAsync('main', {
-	        name: 'main',
-	        priority: 'max',
-	        sound: false,
-	        vibrate: false,
-	      });
-	    }
-	  }
-	const _notificationSubscription = Notifications.addListener(not => {});
 	
-	const play =  async() => {so.playAsync(); setPlaying(true)}
-	const stop = async () => {so.stopAsync(); setPlaying(false)}
-	const pause = async () => {so.pauseAsync(); setPlaying(false)}
+	const play =  async() => { setPlaying(true)} // so.playAsync();
+	const stop = async () => { setPlaying(false)} // so.stopAsync();
+	const pause = async () => {setPlaying(false)} // so.pauseAsync(); 
 
 	//backward = async () => this.state.so.pauseAsync()
 	const forward = async () => loadSong(getNewSong())
-	const repeat = async () => so.pauseAsync()
+	const repeat = async () => {} // so.pauseAsync()
 	//random = async () => this.state.so.pauseAsync()
-	const setTrack = v => {so.setPositionAsync(v); setSliding(false); setTrackPos(v)}
+	const setTrack = v => { setSliding(false); setTrackPos(v)} // so.setPositionAsync(v);
 	// this[name]
 	const icon = name => (<TouchableHighlight onPress={name} activeOpacity={0.4}>
-		<FontAwesome style={styles.iconStyle} name={name.name} size={32} color="lime" />
+		<Icon style={styles.iconStyle} name={name.name} size={32} color="lime" />
 	</TouchableHighlight>)
 
 	const getNewSong = () => {
@@ -106,13 +63,13 @@ function Player(props){
 			try {
 				setMusic(song)
 				const uri = `https://tuba.work/users/${user}/${song}`
-				await so.unloadAsync()
-				so.setOnPlaybackStatusUpdate(updatePlayer)
-				await so.loadAsync({uri: uri})
-				await so.setStatusAsync({
+				//await so.unloadAsync()
+				//so.setOnPlaybackStatusUpdate(updatePlayer)
+				//await so.loadAsync({uri: uri})
+				/*await so.setStatusAsync({
 					progressUpdateIntervalMillis: 1100, 
 					shouldPlay: true,
-				})
+				})*/
 				setPlaying(true)
 			} catch (error) { console.log(error) }
 		}
@@ -127,30 +84,14 @@ function Player(props){
 			if(st.didJustFinish) loadSong(getNewSong())
 		}
 	}
-
-	const func = nextState => { // _handleAppStateChange
-		if(nextState==='background'){
-			Notifications.presentLocalNotificationAsync({
-        		title: 'Now playing', body: 'Press to go back to the app', 
-        		android: { channelId: 'main', sticky: true, icon:'https://tuba.work/img/icon.ico', color:'#00ff00' },
-            	ios: { _displayInForeground: true } })
-		}else{
-			Notifications.dismissAllNotificationsAsync()
-		}
-	}
 	
 	useEffect(() => {
 		setMounted(true)
-		registerForPushNotificationsAsync()
 		
 		loadSong(getNewSong())
-		AppState.addEventListener('change', func)
 		return function cleanup(){ 
 			setMounted(false)
-			console.log(music)
-			so.unloadAsync()
-			Notifications.dismissAllNotificationsAsync()
-			AppState.removeEventListener('change', func)
+			//so.unloadAsync()
 		}
 	}, [])
 

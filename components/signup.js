@@ -1,8 +1,8 @@
 import React from 'react'
-import { View, Text, TextInput, Button,StyleSheet, StatusBar, AsyncStorage } from 'react-native'
+import { SafeAreaView, View, Text, TextInput, Button,StyleSheet, StatusBar, AsyncStorage } from 'react-native'
 import api from './api'
 import { CommonActions } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+//import {  } from 'react-native-safe-area-context';
 
 class Signup extends React.Component{
 

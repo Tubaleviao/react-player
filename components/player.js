@@ -36,16 +36,18 @@ function Player(props){
 	const [playing, setPlaying] = useState(false)
 	const [error, setError] = useState(false)
 	const [mounted, setMounted] = useState(true)
+	const t = {title: '', artist: '', album: '', genre: '', 
+				date: '2020-06-29T07:00:00+00:00', artwork:'https://tuba.work/img/icon.ico'}
 	
-	const play =  async() => { setPlaying(true)} // so.playAsync();
-	const stop = async () => { setPlaying(false)} // so.stopAsync();
-	const pause = async () => {setPlaying(false)} // so.pauseAsync(); 
+	const play =  async() => { tp.play(); setPlaying(true)} // so.playAsync();
+	const stop = async () => { tp.stop(); setPlaying(false)} // so.stopAsync();
+	const pause = async () => {tp.pause(); setPlaying(false)} // so.pauseAsync(); 
 
 	//backward = async () => this.state.so.pauseAsync()
 	const forward = async () => loadSong(getNewSong())
-	const repeat = async () => {} // so.pauseAsync()
+	const repeat = async () => {tp.pause()} // so.pauseAsync()
 	//random = async () => this.state.so.pauseAsync()
-	const setTrack = v => { setSliding(false); setTrackPos(v)} // so.setPositionAsync(v);
+	const setTrack = v => { tp.seekTo(v/1000); setSliding(false); setTrackPos(v)} // so.setPositionAsync(v);
 	// this[name]
 	const icon = name => (<TouchableHighlight onPress={name} activeOpacity={0.4}>
 		<Icon style={styles.iconStyle} name={name.name} size={32} color="lime" />
@@ -59,17 +61,14 @@ function Player(props){
 	let toRemove
 
 	const loadSong = async song => {
+		await tp.setupPlayer()
 		if(song){
 			try {
 				setMusic(song)
 				const uri = `https://tuba.work/users/${user}/${song}`
-				//await so.unloadAsync()
-				//so.setOnPlaybackStatusUpdate(updatePlayer)
-				//await so.loadAsync({uri: uri})
-				/*await so.setStatusAsync({
-					progressUpdateIntervalMillis: 1100, 
-					shouldPlay: true,
-				})*/
+				let track = {id: song, url: uri, title: song, ...t}
+				await tp.add([track])
+				tp.play()
 				setPlaying(true)
 			} catch (error) { console.log(error) }
 		}
@@ -87,8 +86,8 @@ function Player(props){
 	
 	useEffect(() => {
 		setMounted(true)
-		
 		loadSong(getNewSong())
+		
 		return function cleanup(){ 
 			setMounted(false)
 			//so.unloadAsync()
